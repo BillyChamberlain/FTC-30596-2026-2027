@@ -37,6 +37,8 @@ public class mechanumtest extends OpMode {
     private final double fastspeedlen = 3;
     private final double fastspeedspeed = 5000 / 60.0;
 
+    private boolean prevA;
+
     public void init(){
         //Drive
         RF = hardwareMap.get(DcMotor.class, "RF");
@@ -45,27 +47,30 @@ public class mechanumtest extends OpMode {
         LB = hardwareMap.get(DcMotor.class, "LB");
 
         //TODO: Change
-        RF.setDirection(DcMotorSimple.Direction.REVERSE);
         RB.setDirection(DcMotorSimple.Direction.REVERSE);
 
         //Other mechs that shouldn't need to be changed
         intake = hardwareMap.get(DcMotor.class, "intake");
         trans = hardwareMap.get(DcMotor.class, "transfer");
-        turret_shoot = hardwareMap.get(DcMotor.class, "shoot");
-        turret_aim = hardwareMap.get(DcMotor.class, "aim");
-
-        LimelightCam ll = new LimelightCam(hardwareMap);
+//        turret_shoot = hardwareMap.get(DcMotor.class, "shoot");
+//        turret_aim = hardwareMap.get(DcMotor.class, "aim");
+//
+//        LimelightCam ll = new LimelightCam(hardwareMap);
     }
     public void loop(){
+        if(gamepad1.a && !prevA){
+            toggleIntake(1);
+        }
+        prevA = gamepad1.a;
         double vertical = -gamepad1.left_stick_y;
-        double horizontal = gamepad1.left_stick_x;
-        double pivot = gamepad1.right_stick_x;
+        double horizontal = -gamepad1.left_stick_x;
+        double pivot = -gamepad1.right_stick_x;
 
         //Change + and - on this if necessary
-        RF.setPower(pivot + (-vertical + horizontal));
-        RB.setPower(pivot + (-vertical - horizontal));
-        LF.setPower(-pivot + (-vertical - horizontal));
-        LB.setPower(-pivot + (-vertical + horizontal));
+        RF.setPower(pivot + (vertical + horizontal));
+        RB.setPower(pivot + (vertical - horizontal));
+        LF.setPower(-pivot + (vertical - horizontal));
+        LB.setPower(-pivot + (vertical + horizontal));
     }
 
     private static double calculate_fly_speed(float flylen, double x, double y, double ang, Telemetry telemetry){
@@ -116,5 +121,9 @@ public class mechanumtest extends OpMode {
         double highAngleDegrees = Math.toDegrees(Math.atan(highTan));
 
         return new double[] {lowAngleDegrees, highAngleDegrees};
+    }
+    private void toggleIntake(double trans_power){
+        intake.setPower(1.0);
+        trans.setPower(trans_power);
     }
 }
