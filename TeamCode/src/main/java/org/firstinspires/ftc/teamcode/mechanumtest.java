@@ -21,6 +21,9 @@ public class mechanumtest extends OpMode {
 
     private DcMotor turret_shoot;
     private DcMotor turret_aim;
+    private double bpow = 1;
+    boolean in_run;
+    boolean out_run;
 
     private final float flyconstant = 1f; // TODO: NEEDS TO BE CHANGED
 
@@ -38,6 +41,9 @@ public class mechanumtest extends OpMode {
     private final double fastspeedspeed = 5000 / 60.0;
 
     private boolean prevA;
+    private boolean prevB;
+    private boolean prevLT;
+    private boolean prevRT;
 
     public void init(){
         //Drive
@@ -52,7 +58,8 @@ public class mechanumtest extends OpMode {
         //Other mechs that shouldn't need to be changed
         intake = hardwareMap.get(DcMotor.class, "intake");
         trans = hardwareMap.get(DcMotor.class, "transfer");
-//        turret_shoot = hardwareMap.get(DcMotor.class, "shoot");
+        turret_shoot = hardwareMap.get(DcMotor.class, "shoot");
+        turret_shoot.setDirection(DcMotorSimple.Direction.REVERSE);
 //        turret_aim = hardwareMap.get(DcMotor.class, "aim");
 //
 //        LimelightCam ll = new LimelightCam(hardwareMap);
@@ -63,14 +70,33 @@ public class mechanumtest extends OpMode {
         }
         prevA = gamepad1.a;
         double vertical = -gamepad1.left_stick_y;
-        double horizontal = -gamepad1.left_stick_x;
-        double pivot = -gamepad1.right_stick_x;
+        double horizontal = gamepad1.left_stick_x;
+        double pivot = gamepad1.right_stick_x;
 
         //Change + and - on this if necessary
         RF.setPower(pivot + (vertical + horizontal));
         RB.setPower(pivot + (vertical - horizontal));
         LF.setPower(-pivot + (vertical - horizontal));
         LB.setPower(-pivot + (vertical + horizontal));
+
+        if(gamepad1.b && !prevB){
+            if(!out_run) {
+                turret_shoot.setPower(bpow);
+            }
+            else turret_shoot.setPower(0);
+            out_run = !out_run;
+        }
+        prevB = gamepad1.b;
+        if(gamepad1.left_trigger_pressed && !prevLT){
+            bpow -= 0.1;
+        }
+        prevLT = gamepad1.left_trigger_pressed;
+        if(gamepad1.right_trigger_pressed && !prevRT){
+            bpow += 0.1;
+        }
+        prevRT = gamepad1.right_trigger_pressed;
+        telemetry.addData("Supposed fly speed", bpow);
+        telemetry.update();
     }
 
     private static double calculate_fly_speed(float flylen, double x, double y, double ang, Telemetry telemetry){
@@ -123,7 +149,14 @@ public class mechanumtest extends OpMode {
         return new double[] {lowAngleDegrees, highAngleDegrees};
     }
     private void toggleIntake(double trans_power){
-        intake.setPower(1.0);
-        trans.setPower(trans_power);
+        if(!in_run) {
+            intake.setPower(-1.0);
+            trans.setPower(-1 * trans_power);
+        }
+        else{
+            intake.setPower(0);
+            trans.setPower(0);
+        }
+        in_run = !in_run;
     }
 }
